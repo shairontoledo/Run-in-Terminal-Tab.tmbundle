@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>osascript &lt;&lt;-APPLESCRIPT
+	prop parent : app "TextMate"
+	set argv to {"-file", "$TM_FILEPATH"}
+--	on run argv
+		set run_mode to "file"
+		set fcontent to ""
+		set fpath to ""
+		if item 1 of argv equal "-file" then 
+			set fpath to item 2 of argv
+			set fcontent to read open for access (POSIX file fpath)
+		end if
+
+		if item 1 of argv equal "-text" then 
+			set run_mode to "script"
+			set fcontent to item 2 of argv
+		end if
+
+		set win_list to {}
+		tell app "Terminal"
+		  repeat with win in windows
+				set win_name to name of win 
+				set idx to index of win
+				tell window idx
+					repeat with this_tab in tabs 
+						-- if this_tab is not busy then
+							set tab_name to win_name &amp;  " → [" &amp; custom title of this_tab &amp; "]"
+							set end of win_list to tab_name
+						-- end if
+					end repeat
+				end tell			
+			end repeat
+		end tell
+
+		set the_choice to choose from list win_list
+		set selected_tab to item 1 of the_choice 
+		selected_tab
+		tell app "Terminal"
+		  repeat with win in windows
+				set win_name to name of win 
+				set idx to index of win
+				tell window idx
+					repeat with this_tab in tabs 
+						-- if this_tab is not busy then
+							set tab_name to win_name &amp;  " → [" &amp; custom title of this_tab &amp; "]"
+							if selected_tab equal tab_name then
+								 set frontmost to true
+								 set selected of this_tab to true
+								if run_mode equal "file" then
+									do script fpath in this_tab
+								else
+								 do script fcontent in this_tab
+								end
+								activate
+								 set frontmost to true
+							end
+						-- end if
+					end repeat
+				end tell			
+			end repeat
+		end tell
+--	end run
+APPLESCRIPT
+
+</string>
+	<key>input</key>
+	<string>selection</string>
+	<key>keyEquivalent</key>
+	<string>^~@f</string>
+	<key>name</key>
+	<string>Run file in Terminal tab</string>
+	<key>output</key>
+	<string>discard</string>
+	<key>uuid</key>
+	<string>92D96D5B-CC73-4EED-99F4-DB1C0B62DA82</string>
+</dict>
+</plist>
